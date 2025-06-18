@@ -167,6 +167,15 @@ class ServiceRegistry {
     if (!instance.ip || typeof instance.ip !== 'string') {
       return false;
     }
+    // Cho phép IP là tên service
+    if (instance.ip === instance.name) {
+      return true;
+    }
+    // Kiểm tra IP có phải là địa chỉ IP hợp lệ không
+    const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
+    if (!ipRegex.test(instance.ip)) {
+      return false;
+    }
     if (!instance.port || !Number.isInteger(instance.port) || instance.port <= 0 || instance.port > 65535) {
       return false;
     }
