@@ -1,0 +1,134 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:14-alpine
+    environment:
+      POSTGRES_USER: production_user
+      POSTGRES_PASSWORD: strong_production_password
+      POSTGRES_DB: todo_app
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app_network
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - app_network
+    restart: unless-stopped
+
+  service-registry:
+    build:
+      context: ./services/service-registry
+      dockerfile: Dockerfile
+    environment:
+      - NODE_ENV=production
+    env_file:
+      - ./services/service-registry/.env.production
+    ports:
+      - "3100:3100"
+    networks:
+      - app_network
+    depends_on:
+      - postgres
+      - rabbitmq
+    restart: unless-stopped
+
+  user-service:
+    build:
+      context: ./services/user
+      dockerfile: Dockerfile
+    environment:
+      - NODE_ENV=production
+    env_file:
+      - ./services/user/.env.production
+    networks:
+      - app_network
+    depends_on:
+      - postgres
+      - rabbitmq
+      - service-registry
+    restart: unless-stopped
+
+  task-service:
+    build:
+      context: ./services/task-service
+      dockerfile: Dockerfile
+    environment:
+      - NODE_ENV=production
+    env_file:
+      - ./services/task-service/.env.production
+    networks:
+      - app_network
+    depends_on:
+      - postgres
+      - rabbitmq
+      - service-registry
+    restart: unless-stopped
+
+  reminder-service:
+    build:
+      context: ./services/reminder
+      dockerfile: Dockerfile
+    environment:
+      - NODE_ENV=production
+    env_file:
+      - ./services/reminder/.env.production
+    networks:
+      - app_network
+    depends_on:
+      - postgres
+      - rabbitmq
+      - service-registry
+    restart: unless-stopped
+
+  notification-service:
+    build:
+      context: ./services/notification
+      dockerfile: Dockerfile
+    environment:
+      - NODE_ENV=production
+    env_file:
+      - ./services/notification/.env.production
+    networks:
+      - app_network
+    depends_on:
+      - postgres
+      - rabbitmq
+      - service-registry
+    restart: unless-stopped
+
+  gateway:
+    build:
+      context: ./services/gateway
+      dockerfile: Dockerfile
+    environment:
+      - NODE_ENV=production
+    env_file:
+      - ./services/gateway/.env.production
+    ports:
+      - "8080:8080"
+    networks:
+      - app_network
+    depends_on:
+      - service-registry
+      - user-service
+      - task-service
+      - reminder-service
+      - notification-service
+    restart: unless-stopped
+
+networks:
+  app_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  rabbitmq_data: 

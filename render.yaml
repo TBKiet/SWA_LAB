@@ -1,0 +1,152 @@
+services:
+  - type: web
+    name: todo-gateway
+    env: docker
+    dockerfilePath: ./services/gateway/Dockerfile
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 8080
+      - key: SERVICE_NAME
+        value: gateway
+      - key: SERVICE_IP
+        value: 0.0.0.0
+      - key: JWT_PUBLIC_KEY_PATH
+        value: src/config/keys/public.pem
+      - key: SERVICE_REGISTRY_URL
+        value: https://todo-service-registry.onrender.com
+      - key: LOG_LEVEL
+        value: info
+      - key: RATE_LIMIT_WINDOW_MS
+        value: 900000
+      - key: RATE_LIMIT_MAX_REQUESTS
+        value: 100
+    healthCheckPath: /health
+    autoDeploy: true
+
+  - type: web
+    name: todo-user-service
+    env: docker
+    dockerfilePath: ./services/user/Dockerfile
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: SERVICE_NAME
+        value: user-service
+      - key: SERVICE_IP
+        value: 0.0.0.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: todo-postgres
+          property: connectionString
+      - key: JWT_PRIVATE_KEY_PATH
+        value: src/config/keys/private.pem
+      - key: SERVICE_REGISTRY_URL
+        value: https://todo-service-registry.onrender.com
+      - key: LOG_LEVEL
+        value: info
+    healthCheckPath: /health
+    autoDeploy: true
+
+  - type: web
+    name: todo-task-service
+    env: docker
+    dockerfilePath: ./services/task-service/Dockerfile
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3002
+      - key: SERVICE_NAME
+        value: task-service
+      - key: SERVICE_IP
+        value: 0.0.0.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: todo-postgres
+          property: connectionString
+      - key: SERVICE_REGISTRY_URL
+        value: https://todo-service-registry.onrender.com
+      - key: LOG_LEVEL
+        value: info
+    healthCheckPath: /health
+    autoDeploy: true
+
+  - type: web
+    name: todo-reminder-service
+    env: docker
+    dockerfilePath: ./services/reminder/Dockerfile
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3004
+      - key: SERVICE_NAME
+        value: reminder-service
+      - key: SERVICE_IP
+        value: 0.0.0.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: todo-postgres
+          property: connectionString
+      - key: SERVICE_REGISTRY_URL
+        value: https://todo-service-registry.onrender.com
+      - key: LOG_LEVEL
+        value: info
+    healthCheckPath: /health
+    autoDeploy: true
+
+  - type: web
+    name: todo-notification-service
+    env: docker
+    dockerfilePath: ./services/notification/Dockerfile
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3005
+      - key: SERVICE_NAME
+        value: notification-service
+      - key: SERVICE_IP
+        value: 0.0.0.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: todo-postgres
+          property: connectionString
+      - key: SERVICE_REGISTRY_URL
+        value: https://todo-service-registry.onrender.com
+      - key: LOG_LEVEL
+        value: info
+    healthCheckPath: /health
+    autoDeploy: true
+
+  - type: web
+    name: todo-service-registry
+    env: docker
+    dockerfilePath: ./services/service-registry/Dockerfile
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3100
+      - key: SERVICE_NAME
+        value: service-registry
+      - key: SERVICE_IP
+        value: 0.0.0.0
+      - key: HEARTBEAT_INTERVAL_MS
+        value: 5000
+      - key: REGISTRY_ENABLED
+        value: true
+      - key: LOG_LEVEL
+        value: info
+    healthCheckPath: /health
+    autoDeploy: true
+
+databases:
+  - name: todo-postgres
+    databaseName: todo_app
+    user: production_user
+    plan: free 
