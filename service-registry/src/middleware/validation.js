@@ -12,7 +12,18 @@ const schemas = {
         'string.pattern.base': 'Service name can only contain letters, numbers, hyphens, and underscores'
       }),
     ip: Joi.string()
-      .ip()
+      .custom((value, helpers) => {
+        // Allow service name as IP
+        if (value === helpers.state.ancestors[0].name) {
+          return value;
+        }
+        // Validate IP address
+        const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
+        if (!ipRegex.test(value)) {
+          return helpers.error('string.ip');
+        }
+        return value;
+      })
       .required(),
     port: Joi.number()
       .integer()
@@ -29,7 +40,18 @@ const schemas = {
       .pattern(/^[a-zA-Z0-9-_]+$/)
       .required(),
     ip: Joi.string()
-      .ip()
+      .custom((value, helpers) => {
+        // Allow service name as IP
+        if (value === helpers.state.ancestors[0].name) {
+          return value;
+        }
+        // Validate IP address
+        const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
+        if (!ipRegex.test(value)) {
+          return helpers.error('string.ip');
+        }
+        return value;
+      })
       .required(),
     port: Joi.number()
       .integer()
