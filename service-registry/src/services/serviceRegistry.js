@@ -19,13 +19,18 @@ class ServiceRegistry {
 
   // Register a new service instance
   registerService(name, ip, port, metadata = {}) {
+    // Nếu ip là 0.0.0.0 hoặc 127.0.0.1 thì thay bằng tên service
+    let fixedIP = ip.trim();
+    if (fixedIP === '0.0.0.0' || fixedIP === '127.0.0.1') {
+      fixedIP = name.trim();
+    }
     const instanceId = uuidv4();
     const now = Date.now();
     
     const instance = {
       id: instanceId,
       name: name.trim(),
-      ip: ip.trim(),
+      ip: fixedIP,
       port: parseInt(port),
       status: 'healthy',
       registeredAt: now,
