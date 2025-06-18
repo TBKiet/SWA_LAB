@@ -52,17 +52,17 @@ class ServiceRegistry {
     
     // Check if instance already exists (same IP:port)
     const existingIndex = instances.findIndex(
-      inst => inst.ip === ip && inst.port === parseInt(port)
+      inst => inst.ip === fixedIP && inst.port === parseInt(port)
     );
 
     if (existingIndex >= 0) {
       // Update existing instance
       instances[existingIndex] = { ...instances[existingIndex], ...instance };
-      console.log(`Service instance updated: ${name} at ${ip}:${port} (${instanceId})`);
+      console.log(`Service instance updated: ${name} at ${fixedIP}:${port} (${instanceId})`);
     } else {
       // Add new instance
       instances.push(instance);
-      console.log(`Service instance registered: ${name} at ${ip}:${port} (${instanceId})`);
+      console.log(`Service instance registered: ${name} at ${fixedIP}:${port} (${instanceId})`);
       
       // Limit instances per service
       if (instances.length > config.MAX_INSTANCES_PER_SERVICE) {
@@ -79,17 +79,23 @@ class ServiceRegistry {
 
   // Update service heartbeat
   updateHeartbeat(name, ip, port) {
+    // Nếu ip là 0.0.0.0 hoặc 127.0.0.1 thì thay bằng tên service
+    let fixedIP = ip.trim();
+    if (fixedIP === '0.0.0.0' || fixedIP === '127.0.0.1') {
+      fixedIP = name.trim();
+    }
+
     if (!this.services.has(name)) {
       throw new Error(`Service not found: ${name}`);
     }
 
     const instances = this.services.get(name);
     const instance = instances.find(
-      inst => inst.ip === ip && inst.port === parseInt(port)
+      inst => inst.ip === fixedIP && inst.port === parseInt(port)
     );
 
     if (!instance) {
-      throw new Error(`Service instance not found: ${name} at ${ip}:${port}`);
+      throw new Error(`Service instance not found: ${name} at ${fixedIP}:${port}`);
     }
 
     instance.lastHeartbeat = Date.now();
@@ -97,7 +103,7 @@ class ServiceRegistry {
     
     this.stats.totalHeartbeats++;
     
-    console.log(`Heartbeat received: ${name} at ${ip}:${port} (${instance.id})`);
+    console.log(`Heartbeat received: ${name} at ${fixedIP}:${port} (${instance.id})`);
     
     return instance;
   }
