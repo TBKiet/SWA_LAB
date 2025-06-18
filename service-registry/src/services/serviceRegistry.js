@@ -19,18 +19,13 @@ class ServiceRegistry {
 
   // Register a new service instance
   registerService(name, ip, port, metadata = {}) {
-    // Nếu ip là 0.0.0.0 hoặc 127.0.0.1 thì thay bằng tên service
-    let fixedIP = ip.trim();
-    if (fixedIP === '0.0.0.0' || fixedIP === '127.0.0.1') {
-      fixedIP = name.trim();
-    }
     const instanceId = uuidv4();
     const now = Date.now();
     
     const instance = {
       id: instanceId,
       name: name.trim(),
-      ip: fixedIP,
+      ip: ip.trim(),
       port: parseInt(port),
       status: 'healthy',
       registeredAt: now,
@@ -52,17 +47,17 @@ class ServiceRegistry {
     
     // Check if instance already exists (same IP:port)
     const existingIndex = instances.findIndex(
-      inst => inst.ip === fixedIP && inst.port === parseInt(port)
+      inst => inst.ip === ip && inst.port === parseInt(port)
     );
 
     if (existingIndex >= 0) {
       // Update existing instance
       instances[existingIndex] = { ...instances[existingIndex], ...instance };
-      console.log(`Service instance updated: ${name} at ${fixedIP}:${port} (${instanceId})`);
+      console.log(`Service instance updated: ${name} at ${ip}:${port} (${instanceId})`);
     } else {
       // Add new instance
       instances.push(instance);
-      console.log(`Service instance registered: ${name} at ${fixedIP}:${port} (${instanceId})`);
+      console.log(`Service instance registered: ${name} at ${ip}:${port} (${instanceId})`);
       
       // Limit instances per service
       if (instances.length > config.MAX_INSTANCES_PER_SERVICE) {
@@ -79,23 +74,17 @@ class ServiceRegistry {
 
   // Update service heartbeat
   updateHeartbeat(name, ip, port) {
-    // Nếu ip là 0.0.0.0 hoặc 127.0.0.1 thì thay bằng tên service
-    let fixedIP = ip.trim();
-    if (fixedIP === '0.0.0.0' || fixedIP === '127.0.0.1') {
-      fixedIP = name.trim();
-    }
-
     if (!this.services.has(name)) {
       throw new Error(`Service not found: ${name}`);
     }
 
     const instances = this.services.get(name);
     const instance = instances.find(
-      inst => inst.ip === fixedIP && inst.port === parseInt(port)
+      inst => inst.ip === ip && inst.port === parseInt(port)
     );
 
     if (!instance) {
-      throw new Error(`Service instance not found: ${name} at ${fixedIP}:${port}`);
+      throw new Error(`Service instance not found: ${name} at ${ip}:${port}`);
     }
 
     instance.lastHeartbeat = Date.now();
@@ -103,7 +92,7 @@ class ServiceRegistry {
     
     this.stats.totalHeartbeats++;
     
-    console.log(`Heartbeat received: ${name} at ${fixedIP}:${port} (${instance.id})`);
+    console.log(`Heartbeat received: ${name} at ${ip}:${port} (${instance.id})`);
     
     return instance;
   }
@@ -165,15 +154,6 @@ class ServiceRegistry {
       return false;
     }
     if (!instance.ip || typeof instance.ip !== 'string') {
-      return false;
-    }
-    // Cho phép IP là tên service
-    if (instance.ip === instance.name) {
-      return true;
-    }
-    // Kiểm tra IP có phải là địa chỉ IP hợp lệ không
-    const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
-    if (!ipRegex.test(instance.ip)) {
       return false;
     }
     if (!instance.port || !Number.isInteger(instance.port) || instance.port <= 0 || instance.port > 65535) {

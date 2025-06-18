@@ -31,7 +31,7 @@ module.exports = {
   // Service Registry configuration
   SERVICE_REGISTRY_URL: process.env.SERVICE_REGISTRY_URL || 'http://localhost:3100',
   SERVICE_NAME: process.env.SERVICE_NAME || 'user-service',
-  SERVICE_IP: process.env.SERVICE_IP || 'user-service',
+  SERVICE_IP: process.env.SERVICE_IP || '127.0.0.1',
   HEARTBEAT_INTERVAL_MS: parseInt(process.env.HEARTBEAT_INTERVAL_MS) || 5000,
   REGISTRY_ENABLED: process.env.REGISTRY_ENABLED === 'true'
 }; 
