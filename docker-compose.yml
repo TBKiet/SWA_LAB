@@ -1,0 +1,119 @@
+version: '3.8'
+
+services:
+  # Database
+  postgres:
+    image: postgres:14-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: hanhhui0609
+      POSTGRES_MULTIPLE_DATABASES: taskdb,reminderdb,notification_db,club_management_auth
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-multiple-dbs.sh:/docker-entrypoint-initdb.d/init-multiple-dbs.sh
+
+  # RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+
+  # DNS Server
+  dns-server:
+    build: ./dns-server
+    ports:
+      - "8600:8600"
+    environment:
+      - NODE_ENV=development
+    env_file:
+      - ./dns-server/.env.development
+    depends_on:
+      - service-registry
+
+  # Service Registry
+  service-registry:
+    build: ./service-registry
+    ports:
+      - "3100:3100"
+    environment:
+      - NODE_ENV=development
+    env_file:
+      - ./service-registry/.env.development
+
+  # API Gateway
+  gateway:
+    build: ./gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=development
+    env_file:
+      - ./gateway/.env.development
+    depends_on:
+      - service-registry
+      - dns-server
+
+  # User Service
+  user-service:
+    build: ./services/user
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+    env_file:
+      - ./services/user/.env.development
+    depends_on:
+      - postgres
+      - rabbitmq
+      - service-registry
+
+  # Task Service
+  task-service:
+    build: ./services/task-service
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=development
+    env_file:
+      - ./services/task-service/.env.development
+    depends_on:
+      - postgres
+      - rabbitmq
+      - service-registry
+
+  # Reminder Service
+  reminder-service:
+    build: ./services/reminder
+    ports:
+      - "3004:3004"
+    environment:
+      - NODE_ENV=development
+    env_file:
+      - ./services/reminder/.env.development
+    depends_on:
+      - postgres
+      - rabbitmq
+      - service-registry
+
+  # Notification Service
+  notification-service:
+    build: ./services/notification
+    ports:
+      - "3005:3005"
+    environment:
+      - NODE_ENV=development
+    env_file:
+      - ./services/notification/.env.development
+    depends_on:
+      - postgres
+      - rabbitmq
+      - service-registry
+
+volumes:
+  postgres_data: 
